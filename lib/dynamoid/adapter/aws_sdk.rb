@@ -38,7 +38,7 @@ module Dynamoid
       # dynamo_db_endpoint : dynamodb.ap-southeast-1.amazonaws.com)
       # @since 0.2.0
       def connect!
-      @@connection = AWS::DynamoDB.new
+        @@connection = AWS::DynamoDB.new
       end
 
       # Return the established connection.
@@ -75,7 +75,7 @@ module Dynamoid
         end
         hash
       end
-      
+
       # Delete many items at once from DynamoDB. More efficient than delete each item individually.
       #
       # @example Delete IDs 1 and 2 from the table testtable
@@ -93,7 +93,7 @@ module Dynamoid
           Array(ids).in_groups_of(25, false) do |group|
             batch = AWS::DynamoDB::BatchWrite.new(:config => @@connection.config)
             batch.delete(t,group)
-            batch.process!          
+            batch.process!
           end
         end
         nil
@@ -194,11 +194,11 @@ module Dynamoid
       def put_item(table_name, object, options = nil)
         table = get_table(table_name)
         table.items.create(
-          object.delete_if{|k, v| v.nil? || (v.respond_to?(:empty?) && v.empty?)},
-          options || {}
+            object.delete_if{|k, v| v.nil? || (v.respond_to?(:empty?) && v.empty?)},
+            options || {}
         )
       rescue AWS::DynamoDB::Errors::ConditionalCheckFailedException => e
-        raise Dynamoid::Errors::ConditionalCheckFailedException        
+        raise Dynamoid::Errors::ConditionalCheckFailedException
       end
 
       # Query the DynamoDB table. This employs DynamoDB's indexes so is generally faster than scanning, but is
@@ -248,8 +248,30 @@ module Dynamoid
       def scan(table_name, scan_hash, select_opts)
         table = get_table(table_name)
         Enumerator.new do |yielder|
-          table.items.where(scan_hash).select(select_opts).each do |data|
-            yielder.yield data.attributes.symbolize_keys!
+          # MF: Add support for advanced scan filters
+          key = scan_hash.keys[0] if scan_hash && scan_hash.keys
+          exp = scan_hash[:expression] if scan_hash.has_key? :expression
+          case exp
+            when "IN"
+              table.items.where(key).in(*scan_hash[key]).select(select_opts).each do |data|
+                yielder.yield data.attributes.symbolize_keys!
+              end
+            when "BETWEEN"
+              table.items.where(key).between(scan_hash[key][0], scan_hash[key][1]).select(select_opts).each do |data|
+                yielder.yield data.attributes.symbolize_keys!
+              end
+            when "BEGINS_WITH"
+              table.items.where(key).between(scan_hash[key][0], scan_hash[key][1]).select(select_opts).each do |data|
+                yielder.yield data.attributes.symbolize_keys!
+              end
+            when "CONTAINS"
+              table.items.where(key).contains(scan_hash[key]).select(select_opts).each do |data|
+                yielder.yield data.attributes.symbolize_keys!
+              end
+            else
+              table.items.where(scan_hash).select(select_opts).each do |data|
+                yielder.yield data.attributes.symbolize_keys!
+              end
           end
         end
       end

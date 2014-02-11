@@ -90,6 +90,7 @@ Gem::Specification.new do |s|
     "doc/js/jquery.js",
     "doc/method_list.html",
     "doc/top-level-namespace.html",
+    "dynamoid-moda.gemspec",
     "dynamoid.gemspec",
     "lib/dynamoid.rb",
     "lib/dynamoid/adapter.rb",
@@ -155,7 +156,7 @@ Gem::Specification.new do |s|
   ]
   s.homepage = "http://github.com/Veraticus/Dynamoid"
   s.licenses = ["MIT"]
-  s.rubygems_version = "2.2.0"
+  s.rubygems_version = "2.2.2"
   s.summary = "Dynamoid is an ORM for Amazon's DynamoDB"
 
   if s.respond_to? :specification_version then

@@ -261,7 +261,7 @@ module Dynamoid
                 yielder.yield data.attributes.symbolize_keys!
               end
             when "BEGINS_WITH"
-              table.items.where(key).between(scan_hash[key][0], scan_hash[key][1]).select(select_opts).each do |data|
+              table.items.where(key).begins_with(scan_hash[key]).select(select_opts).each do |data|
                 yielder.yield data.attributes.symbolize_keys!
               end
             when "CONTAINS"
